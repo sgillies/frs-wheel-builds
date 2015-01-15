@@ -4,50 +4,89 @@ LAST_TAG_COMMIT = $$(git rev-list --tags --max-count=1)
 VERSION = $$(git describe --tags $(LAST_TAG_COMMIT) )
 
 MACOSX_DEPLOYMENT_TARGET = 10.6
-GEOS_CONFIG = "../../parts/libgeos/bin/geos-config"
+CFLAGS = -Os -arch i386 -arch x86_64
+CXXFLAGS = -Os -arch i386 -arch x86_64
+GEOS_CONFIG = "../../parts/geos/bin/geos-config"
+GDAL_CONFIG = "../../parts/gdal/bin/gdal-config"
 
-shapely: src/Shapely/fixed_wheels/27 src/Shapely/fixed_wheels/34
+all: rasterio_sdist rasterio_dist shapely_sdist shapely_dist 
+
+bin:
+	python bootstrap.py
+
+parts: bin buildout.cfg
+	./bin/buildout -c buildout.cfg
 
 venv27:
-	virtualenv -p python2.7 venv27
+	virtualenv -p python2.7 venv27 && \
+	source venv27/bin/activate && \
+	pip install wheel delocate
 
 venv34:
 	virtualenv -p python3.4 venv34
+	source venv34/bin/activate && \
+	pip install wheel delocate
+
+dist:
+	mkdir dist
 
 src/Shapely/.git:
 	git clone https://github.com/Toblerity/Shapely.git src/Shapely
 
-src/Shapely/fixed_wheels/27: src/Shapely/.git venv27
+shapely_27: src/Shapely/.git parts venv27
 	source venv27/bin/activate && \
 	cd src/Shapely && \
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	pip install wheel delocate && \
-	touch shapely/speedups/*.pyx && \
-	touch shapely/vectorized/*.pyx && \
-	mkdir -p wheels/27 && mkdir -p fixed_wheels/27 && \
-	rm -rf build && rm -rf wheels/27/$(VERSION) && rm -rf fixed_wheels/27/$(VERSION) && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CFLAGS="$$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs)" python setup.py bdist_wheel -d wheels/27/$(VERSION) && \
-	delocate-wheel -w fixed_wheels/27/$(VERSION) --require-archs=intel -v wheels/27/$(VERSION)/Shapely*.whl && \
-	parallel mv {} {.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: fixed_wheels/27/$(VERSION)/Shapely*.whl
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
 
-src/Shapely/fixed_wheels/34: src/Shapely/.git venv34
+shapely_34: src/Shapely/.git parts venv34
 	source venv34/bin/activate && \
 	cd src/Shapely && \
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	pip install wheel delocate && \
-	touch shapely/speedups/*.pyx && \
-	touch shapely/vectorized/*.pyx && \
-	mkdir -p wheels/34 && mkdir -p fixed_wheels/34 && \
-	rm -rf build && rm -rf wheels/34/$(VERSION) && rm -rf fixed_wheels/34/$(VERSION) && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CFLAGS="$$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs)" python setup.py bdist_wheel -d wheels/34/$(VERSION) && \
-	delocate-wheel -w fixed_wheels/34/$(VERSION) --require-archs=intel -v wheels/34/$(VERSION)/Shapely*.whl && \
-	parallel mv {} {.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: fixed_wheels/34/$(VERSION)/Shapely*.whl
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+
+shapely_sdist: dist shapely_27 shapely_34
+	cp src/Shapely/dist/*gz dist
+
+shapely_dist: dist shapely_27 shapely_34
+	source venv27/bin/activate && \
+	parallel delocate-wheel -w src/Shapely/delocated --require-archs=intel -v {} ::: src/Shapely/dist/*.whl
+	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: src/Shapely/delocated/*.whl
+
+src/rasterio/.git:
+	git clone https://github.com/mapbox/rasterio.git src/rasterio
+
+rasterio_27: src/rasterio/.git parts venv27
+	source venv27/bin/activate && \
+	cd src/rasterio && \
+	git fetch --tags && \
+	git checkout $(VERSION) && \
+	pip install -r requirements-dev.txt && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+
+rasterio_34: src/rasterio/.git parts venv34
+	source venv34/bin/activate && \
+	cd src/rasterio && \
+	git fetch --tags && \
+	git checkout $(VERSION) && \
+	pip install -r requirements-dev.txt && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+
+rasterio_sdist: dist rasterio_27 rasterio_34
+	cp src/rasterio/dist/*gz dist
+
+rasterio_dist: dist rasterio_27 rasterio_34
+	source venv27/bin/activate && \
+	parallel delocate-wheel -w src/rasterio/delocated --require-archs=intel -v {} ::: src/rasterio/dist/*.whl
+	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: src/rasterio/delocated/*.whl
 
 clean:
+	rm -rf dist
+	rm -rf src/rasterio
 	rm -rf src/Shapely
 	rm -rf venv27
 	rm -rf venv34
