@@ -4,8 +4,8 @@ LAST_TAG_COMMIT = $$(git rev-list --tags --max-count=1)
 VERSION = $$(git describe --tags $(LAST_TAG_COMMIT) )
 
 MACOSX_DEPLOYMENT_TARGET = 10.6
-CFLAGS = -Os -arch i386 -arch x86_64
-CXXFLAGS = -Os -arch i386 -arch x86_64
+CFLAGS = -arch i386 -arch x86_64
+CXXFLAGS = -arch i386 -arch x86_64
 GEOS_CONFIG = "../../parts/geos/bin/geos-config"
 GDAL_CONFIG = "../../parts/gdal/bin/gdal-config"
 PROJ_LIB = "../../parts/proj4/share/proj"
@@ -40,7 +40,10 @@ shapely_27: src/Shapely/.git parts venv27
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+	touch shapely/vectorized/*.pyx && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs) $(CFLAGS)" pip install -e . && \
+	py.test -k 'not VectorizedTouchesTestCase' && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
 shapely_34: src/Shapely/.git parts venv34
 	source venv34/bin/activate && \
@@ -48,7 +51,10 @@ shapely_34: src/Shapely/.git parts venv34
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+	touch shapely/vectorized/*.pyx && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs) $(CFLAGS)" pip install -e . && \
+	py.test -k 'not VectorizedTouchesTestCase' && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --libs) $$($(GEOS_CONFIG) --dep-libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
 shapely_sdist: dist shapely_27 shapely_34
 	cp src/Shapely/dist/*gz dist
@@ -67,7 +73,9 @@ rasterio_27: src/rasterio/.git parts venv27
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" pip install -e . && \
+	py.test && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
 rasterio_34: src/rasterio/.git parts venv34
 	source venv34/bin/activate && \
@@ -75,7 +83,9 @@ rasterio_34: src/rasterio/.git parts venv34
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" pip install -e . && \
+	py.test && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
 rasterio_sdist: dist rasterio_27 rasterio_34
 	cp src/rasterio/dist/*gz dist
@@ -94,7 +104,9 @@ fiona_27: src/Fiona/.git parts venv27
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" pip install -e . && \
+	nosetests --exclude test_filter_vsi --exclude test_geopackage && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
 fiona_34: src/fiona/.git parts venv34
 	source venv34/bin/activate && \
@@ -102,7 +114,9 @@ fiona_34: src/fiona/.git parts venv34
 	git fetch --tags && \
 	git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs)" python setup.py sdist bdist_wheel
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" pip install -e . && \
+	nosetests --exclude test_filter_vsi --exclude test_geopackage && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $$($(GDAL_CONFIG) --dep-libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
 fiona_sdist: dist fiona_27 fiona_34
 	cp src/fiona/dist/*gz dist
@@ -114,6 +128,7 @@ fiona_dist: dist fiona_27 fiona_34
 
 clean:
 	rm -rf dist
+	rm -rf src/Fiona
 	rm -rf src/rasterio
 	rm -rf src/Shapely
 	rm -rf venv27
