@@ -22,15 +22,15 @@ venv27:
 	virtualenv -p python2.7 venv27 && \
 	source venv27/bin/activate && \
 	pip install -U pip && \
-	pip install wheel && \
-	pip install delocate
+	pip install wheel delocate && \
+	pip install numpy==1.10.2
 
 venv34:
 	virtualenv -p python3.4 venv34
 	source venv34/bin/activate && \
 	pip install -U pip && \
-	pip install wheel && \
-	pip install delocate
+	pip install wheel delocate && \
+	pip install numpy==1.10.2
 
 dist:
 	mkdir dist
