@@ -1,7 +1,7 @@
 import os.path
 
 def staticgeos(options, buildout, environment):
-    optsfile = os.path.join(options['compile-directory'], 'gdal-2.1.0beta1', 'GDALmake.opt')
+    optsfile = os.path.join(options['compile-directory'], 'gdal-2.1.0', 'GDALmake.opt')
     geosdir = os.path.join(buildout['buildout']['directory'], 'parts', 'geos')
     with open(optsfile) as src:
         options = src.read()
