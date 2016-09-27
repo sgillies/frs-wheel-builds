@@ -137,13 +137,19 @@ rasterio_35: src/rasterio/.git parts venv35
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) py.test -k "not test_read_no_band" && \
 	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
+rasterio_manylinux: dist Dockerfile.wheels build-linux-wheels.sh
+	docker build -f Dockerfile.wheels -t rasterio-wheelbuilder .
+	docker run -v $(CURDIR):/io rasterio-wheelbuilder
+
 rasterio_sdist: dist rasterio_27 rasterio_34 rasterio_35
 	cp src/rasterio/dist/*gz dist
 
-rasterio_dist: dist rasterio_27 rasterio_33 rasterio_34 rasterio_35
+rasterio_macosx: dist rasterio_27 rasterio_33 rasterio_34 rasterio_35
 	source venv27/bin/activate && \
 	parallel delocate-wheel -w src/rasterio/delocated --require-archs=intel -v {} ::: src/rasterio/dist/*.whl
 	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: src/rasterio/delocated/*.whl
+
+rasterio_wheels: rasterio_macosx rasterio_manylinux
 
 src/Fiona/.git:
 	git clone https://github.com/Toblerity/Fiona.git src/Fiona
