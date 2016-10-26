@@ -48,7 +48,7 @@ venv35:
 	pip install numpy==1.10.4
 
 dist:
-	mkdir dist
+	mkdir -p dist
 
 src/Shapely/.git:
 	git clone https://github.com/Toblerity/Shapely.git src/Shapely
@@ -194,6 +194,7 @@ fiona_dist: dist fiona_27 fiona_34 fiona_35
 
 clean:
 	rm -rf dist
+	rm -rf wheels
 	rm -rf src/Fiona
 	rm -rf src/rasterio
 	rm -rf src/Shapely

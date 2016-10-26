@@ -14,5 +14,5 @@ done
 
 # Bundle GDAL et al ino the wheels.
 for whl in ${UNREPAIRED_WHEELS}/*.whl; do
-    auditwheel repair ${whl} -w /io/dist
+    auditwheel repair ${whl} -w /io/wheels
 done
