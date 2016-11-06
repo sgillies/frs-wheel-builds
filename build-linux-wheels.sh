@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+SRC_DIR=$1
+cd $SRC_DIR
+
 ORIGINAL_PATH=$PATH
 UNREPAIRED_WHEELS=/tmp/wheels
 

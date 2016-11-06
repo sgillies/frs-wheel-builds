@@ -137,9 +137,18 @@ rasterio_35: src/rasterio/.git parts venv35
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) py.test -k "not test_read_no_band" && \
 	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $(CFLAGS)" python setup.py sdist bdist_wheel
 
-rasterio_manylinux: dist Dockerfile.wheels build-linux-wheels.sh
+rasterio_manylinux: dist .image-built build-linux-wheels.sh src/rasterio/.git
+	docker run -v $(CURDIR):/io rasterio-wheelbuilder bash -c "/io/build-linux-wheels.sh /io/src/rasterio"
+
+fiona_manylinux: dist .image-built build-linux-wheels.sh src/Fiona/.git
+	docker run -v $(CURDIR):/io rasterio-wheelbuilder bash -c "/io/build-linux-wheels.sh /io/src/Fiona"
+
+shapely_manylinux: dist .image-built build-linux-wheels.sh src/Shapely/.git
+	docker run -v $(CURDIR):/io rasterio-wheelbuilder bash -c "/io/build-linux-wheels.sh /io/src/Shapely"
+
+.image-built: Dockerfile.wheels src/rasterio/.git
 	docker build -f Dockerfile.wheels -t rasterio-wheelbuilder .
-	docker run -v $(CURDIR):/io rasterio-wheelbuilder
+	touch .image_built
 
 rasterio_sdist: dist rasterio_27 rasterio_34 rasterio_35
 	cp src/rasterio/dist/*gz dist
