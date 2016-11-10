@@ -1,17 +1,19 @@
 SHELL = /bin/bash
 
-LAST_TAG_COMMIT = $$(git rev-list --tags --max-count=1)
+LAST_TAG_COMMIT == $$(git rev-list --tags --max-count=1)
 VERSION = $$(git describe --tags $(LAST_TAG_COMMIT) )
 
 MACOSX_DEPLOYMENT_TARGET = 10.6
 CFLAGS = -arch i386 -arch x86_64
 CXXFLAGS = -arch i386 -arch x86_64
-GEOS_CONFIG = "../../parts/geos/bin/geos-config"
-GDAL_CONFIG = "../../parts/gdal/bin/gdal-config"
-PROJ_LIB = "../../parts/proj4/share/proj"
-DYLD_LIBRARY_PATH = "../../parts/gdal/lib:../../parts/geos/lib:../../parts/jasper/lib:../../parts/json-c/lib:../../parts/proj4/lib"
+GEOS_CONFIG = "parts/geos/bin/geos-config"
+GDAL_CONFIG = "parts/gdal/bin/gdal-config"
+PROJ_LIB = "parts/proj4/share/proj"
+DYLD_LIBRARY_PATH = "../parts/gdal/lib:../parts/geos/lib:../parts/jasper/lib:../parts/json-c/lib:../parts/proj4/lib"
 
-all: fiona_sdist fiona_dist rasterio_sdist rasterio_dist shapely_sdist shapely_dist
+BUILDDIR := $(shell mktemp -d $(TMPDIR)frswb.XXXXXX)
+
+all: fiona_sdist fiona_dist rasterio_sdist rasterio_macosx rasterio_manylinux1 shapely
 
 bin:
 	python bootstrap.py
@@ -50,49 +52,123 @@ venv35:
 dist:
 	mkdir -p dist
 
+wheels:
+	mkdir -p wheels
+
 src/Shapely/.git:
 	git clone https://github.com/Toblerity/Shapely.git src/Shapely
 
-shapely_27: src/Shapely/.git parts venv27
-	source venv27/bin/activate && \
+shapely_sdist: src/Shapely/.git dist
+	virtualenv -p python3.5 $(BUILDDIR)/sdist && \
+	source $(BUILDDIR)/sdist/bin/activate && \
+	pip install -U pip && \
+	pip install numpy==1.10.4 && \
 	cd src/Shapely && \
-	git fetch --tags && \
-	git checkout $(VERSION) && \
+	git fetch --tags && git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip install -e . && \
-	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) py.test -k 'not VectorizedTouchesTestCase' && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" python setup.py bdist_wheel
+	python setup.py --version > ../../SHAPELY_VERSION.txt && \
+	python setup.py sdist
+	cp src/Shapely/dist/*.tar.gz dist
 
-shapely_34: src/Shapely/.git parts venv34
-	source venv34/bin/activate && \
-	cd src/Shapely && \
-	git fetch --tags && \
-	git checkout $(VERSION) && \
-	pip install -r requirements-dev.txt && \
-	touch shapely/vectorized/*.pyx && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip install -e . && \
-	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) py.test -k 'not VectorizedTouchesTestCase' && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" python setup.py sdist bdist_wheel
+wheels_shapely_27: SHAPELY_VERSION.txt
+	mkdir -p wheels_shapely_27
+	rm -f wheels_shapely_27/*.whl
+	virtualenv -p python2.7 $(BUILDDIR)/venv_shapely_27_wheels && \
+	source $(BUILDDIR)/venv_shapely_27_wheels/bin/activate && \
+	pip install -U pip && \
+	pip install -U wheel delocate && \
+	pip install numpy==1.10.4 && \
+	pip install -r src/Shapely/requirements-dev.txt && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip wheel dist/Shapely*.tar.gz -w wheels_shapely_27
 
-shapely_35: src/Shapely/.git parts venv35
-	source venv35/bin/activate && \
-	cd src/Shapely && \
-	git fetch --tags && \
-	git checkout $(VERSION) && \
-	pip install -r requirements-dev.txt && \
-	touch shapely/vectorized/*.pyx && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip install -e . && \
-	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) py.test -k 'not VectorizedTouchesTestCase' && \
-	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" python setup.py sdist bdist_wheel
+delocated_wheels_shapely_27: wheels_shapely_27
+	mkdir -p delocated_wheels_shapely_27
+	mkdir -p shapely/tests
+	cp -r src/Shapely/tests shapely/tests
+	virtualenv -p python2.7 $(BUILDDIR)/venv_shapely_27_dealocated && \
+	source $(BUILDDIR)/venv_shapely_27_dealocated/bin/activate && \
+	pip install -U pip delocate && \
+	pip install shapely[test]==$$(cat SHAPELY_VERSION.txt) -f wheels_shapely_27 && \
+	cd shapely && DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) python -m pytest && \
+	cd .. && delocate-wheel -w delocated_wheels_shapely_27 --require-archs=intel -v wheels_shapely_27/*.whl
+	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: delocated_wheels_shapely_27/*.whl
 
+wheels_shapely_33: SHAPELY_VERSION.txt
+	mkdir -p wheels_shapely_33
+	rm -f wheels_shapely_33/*.whl
+	virtualenv -p python3.3 $(BUILDDIR)/venv_shapely_33_wheels && \
+	source $(BUILDDIR)/venv_shapely_33_wheels/bin/activate && \
+	pip install -U pip && \
+	pip install -U wheel delocate && \
+	pip install numpy==1.10.4 && \
+	pip install -r src/Shapely/requirements-dev.txt && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip wheel dist/Shapely*.tar.gz -w wheels_shapely_33
 
-shapely_sdist: dist shapely_27 shapely_34 shapely_35
-	cp src/Shapely/dist/*gz dist
+delocated_wheels_shapely_33: wheels_shapely_33
+	mkdir -p delocated_wheels_shapely_33
+	mkdir -p shapely/tests
+	cp -r src/Shapely/tests shapely/tests
+	virtualenv -p python3.3 $(BUILDDIR)/venv_shapely_33_dealocated && \
+	source $(BUILDDIR)/venv_shapely_33_dealocated/bin/activate && \
+	pip install -U pip delocate && \
+	pip install shapely[test]==$$(cat SHAPELY_VERSION.txt) -f wheels_shapely_33 && \
+	cd shapely && DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) python -m pytest && \
+	cd .. && delocate-wheel -w delocated_wheels_shapely_33 --require-archs=intel -v wheels_shapely_33/*.whl
+	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: delocated_wheels_shapely_33/*.whl
 
-shapely_dist: dist shapely_27 shapely_34 shapely_35
-	source venv27/bin/activate && \
-	parallel delocate-wheel -w src/Shapely/delocated --require-archs=intel -v {} ::: src/Shapely/dist/*.whl
-	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: src/Shapely/delocated/*.whl
+wheels_shapely_34: SHAPELY_VERSION.txt
+	mkdir -p wheels_shapely_34
+	rm -f wheels_shapely_34/*.whl
+	virtualenv -p python3.4 $(BUILDDIR)/venv_shapely_34_wheels && \
+	source $(BUILDDIR)/venv_shapely_34_wheels/bin/activate && \
+	pip install -U pip && \
+	pip install -U wheel delocate && \
+	pip install numpy==1.10.4 && \
+	pip install -r src/Shapely/requirements-dev.txt && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip wheel dist/Shapely*.tar.gz -w wheels_shapely_34
+
+delocated_wheels_shapely_34: wheels_shapely_34
+	mkdir -p delocated_wheels_shapely_34
+	mkdir -p shapely/tests
+	cp -r src/Shapely/tests shapely/tests
+	virtualenv -p python3.4 $(BUILDDIR)/venv_shapely_34_dealocated && \
+	source $(BUILDDIR)/venv_shapely_34_dealocated/bin/activate && \
+	pip install -U pip delocate && \
+	pip install shapely[test]==$$(cat SHAPELY_VERSION.txt) -f wheels_shapely_34 && \
+	cd shapely && DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) python -m pytest && \
+	cd .. && delocate-wheel -w delocated_wheels_shapely_34 --require-archs=intel -v wheels_shapely_34/*.whl
+	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: delocated_wheels_shapely_34/*.whl
+
+wheels_shapely_35: SHAPELY_VERSION.txt
+	mkdir -p wheels_shapely_35
+	rm -f wheels_shapely_35/*.whl
+	virtualenv -p python3.5 $(BUILDDIR)/venv_shapely_35_wheels && \
+	source $(BUILDDIR)/venv_shapely_35_wheels/bin/activate && \
+	pip install -U pip && \
+	pip install -U wheel delocate && \
+	pip install numpy==1.10.4 && \
+	pip install -r src/Shapely/requirements-dev.txt && \
+	MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" pip wheel dist/Shapely*.tar.gz -w wheels_shapely_35
+
+delocated_wheels_shapely_35: wheels_shapely_35
+	mkdir -p delocated_wheels_shapely_35
+	mkdir -p shapely/tests
+	cp -r src/Shapely/tests shapely/tests
+	virtualenv -p python3.5 $(BUILDDIR)/venv_shapely_35_dealocated && \
+	source $(BUILDDIR)/venv_shapely_35_dealocated/bin/activate && \
+	pip install -U pip delocate && \
+	pip install shapely[test]==$$(cat SHAPELY_VERSION.txt) -f wheels_shapely_35 && \
+	cd shapely && DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) python -m pytest && \
+	cd .. && delocate-wheel -w delocated_wheels_shapely_35 --require-archs=intel -v wheels_shapely_35/*.whl
+	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: delocated_wheels_shapely_35/*.whl
+
+shapely_macosx: delocated_wheels_shapely_27 delocated_wheels_shapely_33 delocated_wheels_shapely_34 delocated_wheels_shapely_35
+
+rasterio_manylinux1: dist Dockerfile.wheels build-linux-wheels.sh
+	docker build -f Dockerfile.wheels -t rasterio-wheelbuilder .
+	docker run -v $(CURDIR):/io rasterio-wheelbuilder
+
+shapely: shapely_sdist shapely_macosx shapely_manylinux1
 
 src/rasterio/.git:
 	git clone https://github.com/mapbox/rasterio.git src/rasterio
@@ -202,11 +278,11 @@ fiona_dist: dist fiona_27 fiona_34 fiona_35
 	parallel mv {} dist/{/.}.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl ::: src/fiona/delocated/*.whl
 
 clean:
+	rm -rf wheels_shapely_*
+	rm -rf delocated_wheels_shapely_*
+	rm -rf shapely
 	rm -rf dist
 	rm -rf wheels
 	rm -rf src/Fiona
 	rm -rf src/rasterio
 	rm -rf src/Shapely
-	rm -rf venv27
-	rm -rf venv34
-	rm -rf venv35
