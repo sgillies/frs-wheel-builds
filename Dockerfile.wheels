@@ -80,10 +80,9 @@ RUN mkdir -p /src \
     && rm -rf /src
 
 # Bake dev requirements into the Docker image for faster builds
-ADD src/rasterio/requirements-dev.txt /tmp/requirements-dev.txt
 RUN for PYBIN in /opt/python/*/bin; do \
         if [[ $PYBIN == *"26"* ]]; then continue; fi ; \
-        $PYBIN/pip install -r /tmp/requirements-dev.txt ; \
+        $PYBIN/pip install cython "numpy>=1.11" ; \
     done
 
 WORKDIR /io
