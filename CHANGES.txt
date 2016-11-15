@@ -1,0 +1,16 @@
+Changes
+=======
+
+1.0.0 (2016-11-15)
+------------------
+
+- Manylinux1 targets for Shapely and Fiona have been added to the existing one
+  for Rasterio.
+- Python 3.3 has been dropped from the macosx wheel targets. Binary releases
+  of this version of Python are no longer coming from python.org.
+- C asserts are re-enabled in GEOS for compatibility with Homebrew's GEOS 
+  formula.
+- GDAL version is upgraded to 2.1.2.
+- Extra macosx SDK versions have been dropped from wheel platform tags. This
+  means that users will need a newer (>6.0) version of pip to install the 
+  macosx wheels.
