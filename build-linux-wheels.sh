@@ -9,7 +9,7 @@ UNREPAIRED_WHEELS=/tmp/wheels
 for PYBIN in /opt/python/*/bin; do
     if [[ $PYBIN == *"26"* ]]; then continue; fi
     export PATH=${PYBIN}:$ORIGINAL_PATH
-    PACKAGE_DATA=1 pip wheel $SRCDIST --no-deps -w ${UNREPAIRED_WHEELS}
+    CFLAGS="-I/usr/local/ssl/include" LDFLAGS="-L/usr/local/ssl/lib" PACKAGE_DATA=1 pip wheel $SRCDIST --no-deps -w ${UNREPAIRED_WHEELS}
 done
 
 # Bundle GDAL et al into the wheels.

@@ -6,7 +6,33 @@
 
 FROM quay.io/pypa/manylinux1_x86_64
 
-RUN yum update -y && yum install -y curl-devel json-c-devel
+COPY patches/changeset_36550.diff /var/patches/changeset_36550.diff
+
+RUN yum update -y && yum install -y json-c-devel
+
+# Install openssl
+RUN mkdir -p /src \
+    && cd /src \
+    && curl -f -L -O https://www.openssl.org/source/openssl-1.0.2j.tar.gz \
+    && echo "e7aff292be21c259c6af26469c7a9b3ba26e9abaaffd325e3dccc9785256c431  openssl-1.0.2j.tar.gz" > checksum \
+    && sha256sum -c checksum \
+    && tar zxf openssl-1.0.2j.tar.gz \
+    && cd /src/openssl-1.0.2j \
+    && ./config no-shared no-ssl2 no-async -fPIC \
+    && make \
+    && make install \
+    && rm -rf /src
+
+# Install curl
+RUN mkdir -p /src \
+    && cd /src \
+    && curl -f -L -O http://curl.askapache.com/download/curl-7.51.0.tar.bz2 \
+    && tar jxf curl-7.51.0.tar.bz2 \
+    && cd /src/curl-7.51.0 \
+    && LIBS=-ldl ./configure --with-ssl=/usr/local/ssl \
+    && make \
+    && make install \
+    && rm -rf /src
 
 # Install geos
 RUN mkdir -p /src \
@@ -44,9 +70,10 @@ RUN mkdir -p /src \
 # gdal
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.1.1/gdal-2.1.1.tar.gz \
-    && tar xzf gdal-2.1.1.tar.gz \
-    && cd /src/gdal-2.1.1 \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.1.2/gdal-2.1.2.tar.gz \
+    && tar xzf gdal-2.1.2.tar.gz \
+    && cd /src/gdal-2.1.2 \
+    && patch -u -p3 < /var/patches/changeset_36550.diff \
     && ./configure \
         --with-threads \
         --disable-debug \
@@ -73,11 +100,11 @@ RUN mkdir -p /src \
         --with-libjson-c \
         --with-libiconv-prefix=/usr \
         --with-libz=/usr \
-        --with-curl=curl-config \
+        --with-curl=/usr/local/bin/curl-config \
         --without-python \
     && make \
-    && make install \
-    && rm -rf /src
+    && make install
+#    && rm -rf /src
 
 # Bake dev requirements into the Docker image for faster builds
 RUN for PYBIN in /opt/python/*/bin; do \

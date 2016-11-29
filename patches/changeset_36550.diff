@@ -1,0 +1,23 @@
+Index: /trunk/gdal/port/cpl_http.cpp
+===================================================================
+--- /trunk/gdal/port/cpl_http.cpp	(revision 36549)
++++ /trunk/gdal/port/cpl_http.cpp	(revision 36550)
+@@ -664,4 +669,18 @@
+     }
+ 
++    // Custom path to SSL certificates.
++    const char* pszCAInfo = CSLFetchNameValue( papszOptions, "CAINFO" );
++    if (pszCAInfo == NULL)
++        // Name of environment variable used by the curl binary
++        pszCAInfo = CPLGetConfigOption("CURL_CA_BUNDLE", NULL);
++    if (pszCAInfo == NULL)
++        // Name of environment variable used by the curl binary (tested
++        // after CURL_CA_BUNDLE
++        pszCAInfo = CPLGetConfigOption("SSL_CERT_FILE", NULL);
++    if( pszCAInfo != NULL )
++    {
++        curl_easy_setopt(http_handle, CURLOPT_CAINFO, pszCAInfo);
++    }
++
+     /* Set Referer */
+     const char *pszReferer = CSLFetchNameValue(papszOptions, "REFERER");

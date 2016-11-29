@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.1.0 (2016-11-29)
+------------------
+
+- OpenSSL 1.0.2j and Curl 7.51.0 are included in the build and GDAL 2.1.2 is
+  patched to enable non-system certificate bundles to be used via curl's
+  CURL_CA_BUNDLE environment variable.
+
 1.0.0 (2016-11-15)
 ------------------
 
