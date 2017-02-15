@@ -6,8 +6,6 @@
 
 FROM quay.io/pypa/manylinux1_x86_64
 
-COPY patches/changeset_36550.diff /var/patches/changeset_36550.diff
-
 RUN yum update -y && yum install -y json-c-devel
 
 # Install openssl
@@ -70,10 +68,9 @@ RUN mkdir -p /src \
 # gdal
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.1.2/gdal-2.1.2.tar.gz \
-    && tar xzf gdal-2.1.2.tar.gz \
-    && cd /src/gdal-2.1.2 \
-    && patch -u -p3 < /var/patches/changeset_36550.diff \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.1.3/gdal-2.1.3.tar.gz \
+    && tar xzf gdal-2.1.3.tar.gz \
+    && cd /src/gdal-2.1.3 \
     && ./configure \
         --with-threads \
         --disable-debug \
@@ -103,13 +100,14 @@ RUN mkdir -p /src \
         --with-curl=/usr/local/bin/curl-config \
         --without-python \
     && make \
-    && make install
-#    && rm -rf /src
+    && make install \
+    && rm -rf /src
 
 # Bake dev requirements into the Docker image for faster builds
 RUN for PYBIN in /opt/python/*/bin; do \
         if [[ $PYBIN == *"26"* ]]; then continue; fi ; \
-        $PYBIN/pip install cython "numpy>=1.11" ; \
+        $PYBIN/pip install -U pip ; \
+        $PYBIN/pip install cython "numpy>=1.11" --only-binary cython,numpy ; \
     done
 
 WORKDIR /io

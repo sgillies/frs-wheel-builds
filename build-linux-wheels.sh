@@ -9,6 +9,7 @@ UNREPAIRED_WHEELS=/tmp/wheels
 for PYBIN in /opt/python/*/bin; do
     if [[ $PYBIN == *"26"* ]]; then continue; fi
     export PATH=${PYBIN}:$ORIGINAL_PATH
+    pip install cython "numpy>=1.10" --only-binary cython,numpy
     CFLAGS="-I/usr/local/ssl/include" LDFLAGS="-L/usr/local/ssl/lib" PACKAGE_DATA=1 pip wheel $SRCDIST --no-deps -w ${UNREPAIRED_WHEELS}
 done
 
