@@ -11,7 +11,7 @@ for py in 2.7 3.4 3.5; do
     source ${tmpvenv}/bin/activate
     pip install -U pip
     pip install pytest fiona[test]==$(cat FIONA_VERSION.txt) -f wheels
-    cd fiona && DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH} nosetests --exclude test_filter_vsi --exclude test_geopackage --exclude test_write_mismatch
+    cd fiona && DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH} nosetests --exclude test_filter_vsi --exclude test_geopackage --exclude test_write_mismatch --exclude test_fio_ls_single_layer
     cd ..
 done
 
