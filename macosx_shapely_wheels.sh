@@ -14,7 +14,7 @@ for py in 2.7 3.4 3.5 3.6; do
 done
 
 virtualenv -p python3.5 ${BUILDDIR}/delocate
-source ${BUILDDIR}/delocate/bin/activate && pip install -U delocate
+source ${BUILDDIR}/delocate/bin/activate && pip install -U git+https://github.com/matthew-brett/delocate.git@da5a0f7c81a353e939344e27e59f15994bfb6b8f#egg=delocate
 
 for whl in wheels/Shapely*.whl; do
     delocate-wheel --require-archs=intel -v ${whl}
