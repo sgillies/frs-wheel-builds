@@ -4,7 +4,7 @@ CWD := $(shell pwd)
 LAST_TAG_COMMIT = $$(git rev-list --tags --max-count=1)
 VERSION = $$(git describe --tags $(LAST_TAG_COMMIT) )
 
-MACOSX_DEPLOYMENT_TARGET = 10.6
+MACOSX_DEPLOYMENT_TARGET = 10.9
 CFLAGS = -arch i386 -arch x86_64
 CXXFLAGS = -arch i386 -arch x86_64
 

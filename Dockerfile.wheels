@@ -11,11 +11,11 @@ RUN yum update -y && yum install -y json-c-devel
 # Install openssl
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O https://www.openssl.org/source/openssl-1.0.2j.tar.gz \
-    && echo "e7aff292be21c259c6af26469c7a9b3ba26e9abaaffd325e3dccc9785256c431  openssl-1.0.2j.tar.gz" > checksum \
+    && curl -f -L -O https://www.openssl.org/source/openssl-1.0.2l.tar.gz \
+    && echo "ce07195b659e75f4e1db43552860070061f156a98bb37b672b101ba6e3ddf30c  openssl-1.0.2l.tar.gz" > checksum \
     && sha256sum -c checksum \
-    && tar zxf openssl-1.0.2j.tar.gz \
-    && cd /src/openssl-1.0.2j \
+    && tar zxf openssl-1.0.2l.tar.gz \
+    && cd /src/openssl-1.0.2l \
     && ./config no-shared no-ssl2 no-async -fPIC \
     && make \
     && make install \
@@ -65,12 +65,15 @@ RUN mkdir -p /src \
     && make install \
     && rm -rf /src
 
+ADD patches/changeset_38820.diff /tmp
+
 # gdal
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.1.3/gdal-2.1.3.tar.gz \
-    && tar xzf gdal-2.1.3.tar.gz \
-    && cd /src/gdal-2.1.3 \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.2.0/gdal-2.2.0.tar.gz \
+    && tar xzf gdal-2.2.0.tar.gz \
+    && cd /src/gdal-2.2.0 \
+    && patch -u --verbose -p 3 < /tmp/changeset_38820.diff \
     && ./configure \
         --with-threads \
         --disable-debug \
