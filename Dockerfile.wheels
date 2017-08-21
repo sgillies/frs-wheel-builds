@@ -65,15 +65,12 @@ RUN mkdir -p /src \
     && make install \
     && rm -rf /src
 
-ADD patches/changeset_38820.diff /tmp
-
 # gdal
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.2.0/gdal-2.2.0.tar.gz \
-    && tar xzf gdal-2.2.0.tar.gz \
-    && cd /src/gdal-2.2.0 \
-    && patch -u --verbose -p 3 < /tmp/changeset_38820.diff \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.2.1/gdal-2.2.1.tar.gz \
+    && tar xzf gdal-2.2.1.tar.gz \
+    && cd /src/gdal-2.2.1 \
     && ./configure \
         --with-threads \
         --disable-debug \
