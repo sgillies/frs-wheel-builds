@@ -11,17 +11,14 @@ CXXFLAGS = -arch i386 -arch x86_64
 GEOS_CONFIG = "$(CWD)/parts/geos/bin/geos-config"
 GDAL_CONFIG = "$(CWD)/parts/gdal/bin/gdal-config"
 PROJ_LIB = "$(CWD)parts/proj4/share/proj"
-DYLD_LIBRARY_PATH = "$(CWD)/parts/gdal/lib:$(CWD)/parts/geos/lib:$(CWD)/parts/jasper/lib:$(CWD)/parts/json-c/lib:$(CWD)/parts/proj4/lib"
+DYLD_LIBRARY_PATH = "$(CWD)/parts/gdal/lib:$(CWD)/parts/geos/lib:$(CWD)/parts/openjpeg/lib:$(CWD)/parts/json-c/lib:$(CWD)/parts/proj4/lib"
 
 BUILDDIR := $(shell mktemp -d $(TMPDIR)frswb.XXXXXX)
 
 all: fiona rasterio shapely
 
-bin:
-	python bootstrap.py
-
-parts: bin buildout.cfg
-	./bin/buildout -c buildout.cfg
+parts: buildout.cfg
+	buildout -c buildout.cfg
 
 dist:
 	mkdir -p dist
