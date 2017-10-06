@@ -6,7 +6,12 @@
 
 FROM quay.io/pypa/manylinux1_x86_64
 
-RUN yum update -y && yum install -y json-c-devel
+RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
+    && sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-Base.repo \
+    && sed -i 's|#baseurl=http://mirror.centos.org/centos/$releasever|baseurl=http://vault.centos.org/5.11|' /etc/yum.repos.d/CentOS-Base.repo \
+    && sed -i 's/^/#/' /etc/yum.repos.d/libselinux.repo
+
+RUN yum update -y && yum install -y json-c-devel zlib-devel
 
 # Install openssl
 RUN mkdir -p /src \
@@ -35,21 +40,10 @@ RUN mkdir -p /src \
 # Install geos
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/geos/geos-3.5.0.tar.bz2 \
-    && tar jxf geos-3.5.0.tar.bz2 \
-    && cd /src/geos-3.5.0 \
+    && curl -f -L -O http://download.osgeo.org/geos/geos-3.6.2.tar.bz2 \
+    && tar jxf geos-3.6.2.tar.bz2 \
+    && cd /src/geos-3.6.2 \
     && ./configure \
-    && make \
-    && make install \
-    && rm -rf /src
-
-# Install jasper
-RUN mkdir -p /src \
-    && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/jasper-1.900.1.uuid.tar.gz \
-    && tar xzf jasper-1.900.1.uuid.tar.gz \
-    && cd /src/jasper-1.900.1.uuid \
-    && ./configure --disable-debug --enable-shared \
     && make \
     && make install \
     && rm -rf /src
@@ -57,20 +51,63 @@ RUN mkdir -p /src \
 # proj4
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/proj/proj-4.9.1.tar.gz \
-    && tar xzf proj-4.9.1.tar.gz \
-    && cd /src/proj-4.9.1 \
+    && curl -f -L -O http://download.osgeo.org/proj/proj-4.9.3.tar.gz \
+    && tar xzf proj-4.9.3.tar.gz \
+    && cd /src/proj-4.9.3 \
     && ./configure \
     && make \
     && make install \
     && rm -rf /src
 
-# gdal
+# cmake
+RUN cd /usr/local/src \
+    && curl -f -L -O http://www.cmake.org/files/v3.9/cmake-3.9.1.tar.gz \
+    && tar xzf cmake-3.9.1.tar.gz \
+    && cd cmake-3.9.1 \
+    && ./bootstrap --prefix=/usr/local/cmake \
+    && make; make install
+
+# openjpeg
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.2.1/gdal-2.2.1.tar.gz \
-    && tar xzf gdal-2.2.1.tar.gz \
-    && cd /src/gdal-2.2.1 \
+    && curl -f -L -O https://github.com/uclouvain/openjpeg/archive/v2.3.0.tar.gz \
+    && tar xzf v2.3.0.tar.gz \
+    && cd /src/openjpeg-2.3.0 \
+    && mkdir -p build \
+    && cd build \
+    && /usr/local/cmake/bin/cmake .. -DBUILD_THIRDPARTY:BOOL=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && make install \
+    && make clean \
+    && rm -rf /src
+
+COPY hdf5-1.10.1.tar.gz /hdf5-1.10.1.tar.gz
+
+# hdf
+RUN cd /usr/local/src \
+    && cp /hdf5-1.10.1.tar.gz . \
+    && tar xzf hdf5-1.10.1.tar.gz \
+    && cd hdf5-1.10.1 \
+    && ./configure --prefix=/usr/local --enable-shared --enable-build-mode=production \
+    && make \
+    && make install
+
+## netcdf
+RUN cd /usr/local/src \
+    && curl -f -L -O ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.1.tar.gz \
+    && tar xzf netcdf-4.4.1.1.tar.gz \
+    && cd netcdf-4.4.1.1 \
+    && CFLAGS="-I/usr/local/include" CXXFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" ./configure \
+    && make \
+    && make install
+
+COPY patches/changeset_40330.diff /changeset_40330.diff
+
+# gdal
+RUN cd /usr/local/src \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz \
+    && tar xzf gdal-2.2.2.tar.gz \
+    && cd gdal-2.2.2 \
+    && patch -u --verbose -p4 < /changeset_40330.diff \
     && ./configure \
         --with-threads \
         --disable-debug \
@@ -78,7 +115,6 @@ RUN mkdir -p /src \
         --without-grass \
         --without-libgrass \
         --without-jpeg12 \
-        --with-jasper=/usr/local \
         --with-libtiff=internal \
         --with-jpeg \
         --with-gif \
@@ -98,10 +134,14 @@ RUN mkdir -p /src \
         --with-libiconv-prefix=/usr \
         --with-libz=/usr \
         --with-curl=/usr/local/bin/curl-config \
+        --with-netcdf=/usr/local/netcdf \
+        --with-openjpeg \
+        --without-jasper \
         --without-python \
+        --without-hdf4 \
+        --without-hdf5 \
     && make \
-    && make install \
-    && rm -rf /src
+    && make install
 
 # Bake dev requirements into the Docker image for faster builds
 RUN for PYBIN in /opt/python/*/bin; do \

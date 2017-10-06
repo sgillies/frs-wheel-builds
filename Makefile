@@ -11,17 +11,14 @@ CXXFLAGS = -arch i386 -arch x86_64
 GEOS_CONFIG = "$(CWD)/parts/geos/bin/geos-config"
 GDAL_CONFIG = "$(CWD)/parts/gdal/bin/gdal-config"
 PROJ_LIB = "$(CWD)parts/proj4/share/proj"
-DYLD_LIBRARY_PATH = "$(CWD)/parts/gdal/lib:$(CWD)/parts/geos/lib:$(CWD)/parts/jasper/lib:$(CWD)/parts/json-c/lib:$(CWD)/parts/proj4/lib"
+DYLD_LIBRARY_PATH = "$(CWD)/parts/gdal/lib:$(CWD)/parts/geos/lib:$(CWD)/parts/openjpeg/lib:$(CWD)/parts/json-c/lib:$(CWD)/parts/proj4/lib:$(CWD)/parts/hdf5/lib:$(CWD)/parts/netcdf/lib"
 
 BUILDDIR := $(shell mktemp -d $(TMPDIR)frswb.XXXXXX)
 
 all: fiona rasterio shapely
 
-bin:
-	python bootstrap.py
-
-parts: bin buildout.cfg
-	./bin/buildout -c buildout.cfg
+parts: buildout.cfg
+	buildout -c buildout.cfg
 
 dist:
 	mkdir -p dist
@@ -73,6 +70,7 @@ dist/rasterio.tar.gz: src/rasterio/.git dist
 	git fetch --tags && git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
 	python setup.py --version | tail -1 > ../../RASTERIO_VERSION.txt && \
+	which python && pip list && python -c "import numpy; print(numpy.__version__)" && \
 	python setup.py sdist
 	cp src/rasterio/dist/*.tar.gz dist
 	cp dist/rasterio*.tar.gz dist/rasterio.tar.gz
