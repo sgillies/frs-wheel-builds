@@ -70,9 +70,9 @@ RUN cd /usr/local/src \
 # openjpeg
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O https://github.com/uclouvain/openjpeg/archive/v2.2.0.tar.gz \
-    && tar xzf v2.2.0.tar.gz \
-    && cd /src/openjpeg-2.2.0 \
+    && curl -f -L -O https://github.com/uclouvain/openjpeg/archive/v2.3.0.tar.gz \
+    && tar xzf v2.3.0.tar.gz \
+    && cd /src/openjpeg-2.3.0 \
     && mkdir -p build \
     && cd build \
     && /usr/local/cmake/bin/cmake .. -DBUILD_THIRDPARTY:BOOL=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
@@ -87,7 +87,7 @@ RUN cd /usr/local/src \
     && cp /hdf5-1.10.1.tar.gz . \
     && tar xzf hdf5-1.10.1.tar.gz \
     && cd hdf5-1.10.1 \
-    && ./configure --prefix=/usr/local \
+    && ./configure --prefix=/usr/local --enable-shared --enable-build-mode=production \
     && make \
     && make install
 
@@ -100,11 +100,14 @@ RUN cd /usr/local/src \
     && make \
     && make install
 
+COPY patches/changeset_40330.diff /changeset_40330.diff
+
 # gdal
 RUN cd /usr/local/src \
     && curl -f -L -O http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz \
     && tar xzf gdal-2.2.2.tar.gz \
     && cd gdal-2.2.2 \
+    && patch -u --verbose -p4 < /changeset_40330.diff \
     && ./configure \
         --with-threads \
         --disable-debug \
@@ -135,6 +138,8 @@ RUN cd /usr/local/src \
         --with-openjpeg \
         --without-jasper \
         --without-python \
+        --without-hdf4 \
+        --without-hdf5 \
     && make \
     && make install
 
