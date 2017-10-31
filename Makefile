@@ -84,6 +84,7 @@ shapely_wheels: dist/shapely.tar.gz wheels
 
 shapely_macosx: shapely_wheels
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_shapely_tests.sh
+	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/Shapely*.whl
 
 shapely_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/shapely.tar.gz
 	docker run -v $(CURDIR):/io wheelbuilder bash -c "/io/build-linux-wheels.sh /io/dist/shapely.tar.gz"
@@ -95,6 +96,7 @@ fiona_wheels: dist/fiona.tar.gz wheels
 
 fiona_macosx: fiona_wheels
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_fiona_tests.sh
+	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/Fiona*.whl
 
 fiona_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/fiona.tar.gz
 	docker run -v $(CURDIR):/io wheelbuilder bash -c "/io/build-linux-wheels.sh /io/dist/fiona.tar.gz"
@@ -106,6 +108,7 @@ rasterio_wheels: dist/rasterio.tar.gz wheels
 
 rasterio_macosx: rasterio_wheels
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_rasterio_tests.sh
+	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/rasterio*.whl
 
 rasterio_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/rasterio.tar.gz
 	docker run -v $(CURDIR):/io wheelbuilder bash -c "/io/build-linux-wheels.sh /io/dist/rasterio.tar.gz"
