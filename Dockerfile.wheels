@@ -11,7 +11,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
     && sed -i 's|#baseurl=http://mirror.centos.org/centos/$releasever|baseurl=http://vault.centos.org/5.11|' /etc/yum.repos.d/CentOS-Base.repo \
     && sed -i 's/^/#/' /etc/yum.repos.d/libselinux.repo
 
-RUN yum update -y && yum install -y json-c-devel zlib-devel
+RUN yum update -y && yum install -y json-c-devel zlib-devel expat-devel
 
 # Install openssl
 RUN mkdir -p /src \
@@ -102,6 +102,11 @@ RUN cd /usr/local/src \
 
 COPY patches/changeset_40330.diff /changeset_40330.diff
 
+# /usr/include/expat_external.h of this image is broken when included from C++
+RUN echo '#ifdef __cplusplus' >> /usr/include/expat_external.h \
+    echo '}' >> /usr/include/expat_external.h \
+    echo '#endif' >> /usr/include/expat_external.h
+
 # gdal
 RUN cd /usr/local/src \
     && curl -f -L -O http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz \
@@ -120,7 +125,6 @@ RUN cd /usr/local/src \
         --with-gif \
         --with-png \
         --with-geotiff=internal \
-        --with-sqlite3=/usr \
         --with-pcraster=internal \
         --with-pcraster=internal \
         --with-pcidsk=internal \
@@ -129,7 +133,6 @@ RUN cd /usr/local/src \
         --with-pam \
         --with-geos=/usr/local/bin/geos-config \
         --with-static-proj4=/usr/local \
-        --with-expat=/usr \
         --with-libjson-c \
         --with-libiconv-prefix=/usr \
         --with-libz=/usr \
