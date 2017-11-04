@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.5.2 (next)
+------------------
+
+- Add optimization and stripping to CFLAGS, CXXFLAGS, LDFLAGS (#19).
+- Add and patch expat headers, enabling GeoPackage support (#22, #23).
+
 1.5.1 (2017-10-30)
 ------------------
 
