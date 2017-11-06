@@ -92,7 +92,7 @@ shapely_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/sh
 shapely: dist/shapely.tar.gz shapely_macosx shapely_manylinux1
 
 fiona_wheels: dist/fiona.tar.gz wheels
-	BUILDDIR=$(BUILDDIR) MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $(CFLAGS)" GDAL_VERSION="2" ./macosx_fiona_wheels.sh
+	BUILDDIR=$(BUILDDIR) MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $(CFLAGS)" GDAL_VERSION="2.2" ./macosx_fiona_wheels.sh
 
 fiona_macosx: fiona_wheels
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_fiona_tests.sh
