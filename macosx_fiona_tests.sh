@@ -11,7 +11,7 @@ for py in 2.7 3.4 3.5; do
     source ${tmpvenv}/bin/activate
     pip install -U pip
     pip install pytest fiona[test]==$(cat FIONA_VERSION.txt) -f wheels
-    cd fiona && DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH} python -m pytest -k "not testCreateBigIntSchema"
+    cd fiona && DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH} python -c "from tests import setup; setup()" && DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH} python -m pytest -k "not testCreateBigIntSchema"
     cd ..
 done
 

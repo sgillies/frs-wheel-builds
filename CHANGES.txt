@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.6.0 (2018-02-12)
+------------------
+
+- Add expat 2.2.5 to manylinux1 wheel building image and include it in the
+  wheels (#26). CentOS 5's expat headers were defective.
+
 1.5.2 (2017-11-06)
 ------------------
 

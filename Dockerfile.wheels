@@ -11,7 +11,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
     && sed -i 's|#baseurl=http://mirror.centos.org/centos/$releasever|baseurl=http://vault.centos.org/5.11|' /etc/yum.repos.d/CentOS-Base.repo \
     && sed -i 's/^/#/' /etc/yum.repos.d/libselinux.repo
 
-RUN yum update -y && yum install -y json-c-devel zlib-devel expat-devel
+RUN yum update -y && yum install -y json-c-devel zlib-devel
 
 # Install openssl
 RUN mkdir -p /src \
@@ -100,12 +100,16 @@ RUN cd /usr/local/src \
     && make \
     && make install
 
-COPY patches/changeset_40330.diff /changeset_40330.diff
+## expat
+RUN cd /usr/local/src \
+    && curl -f -L -O https://github.com/libexpat/libexpat/releases/download/R_2_2_5/expat-2.2.5.tar.bz2 \
+    && tar xjf expat-2.2.5.tar.bz2 \
+    && cd expat-2.2.5 \
+    && ./configure --prefix=/usr/local \
+    && make \
+    && make install
 
-# /usr/include/expat_external.h of this image is broken when included from C++
-RUN echo '#ifdef __cplusplus' >> /usr/include/expat_external.h \
-    echo '}' >> /usr/include/expat_external.h \
-    echo '#endif' >> /usr/include/expat_external.h
+COPY patches/changeset_40330.diff /changeset_40330.diff
 
 # gdal
 RUN cd /usr/local/src \
@@ -133,6 +137,7 @@ RUN cd /usr/local/src \
         --with-pam \
         --with-geos=/usr/local/bin/geos-config \
         --with-static-proj4=/usr/local \
+        --with-expat=/usr/local \
         --with-libjson-c \
         --with-libiconv-prefix=/usr \
         --with-libz=/usr \
