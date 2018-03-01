@@ -52,3 +52,12 @@ docs/_build/
 
 # PyBuilder
 target/
+bin
+doc
+share
+src
+rasterio
+wheels
+*.txt
+.DS_Store
+.wheelbuilder_image_built

@@ -11,7 +11,7 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf \
     && sed -i 's|#baseurl=http://mirror.centos.org/centos/$releasever|baseurl=http://vault.centos.org/5.11|' /etc/yum.repos.d/CentOS-Base.repo \
     && sed -i 's/^/#/' /etc/yum.repos.d/libselinux.repo
 
-RUN yum update -y && yum install -y json-c-devel zlib-devel
+RUN yum update -y && yum install -y json-c-devel zlib-devel libtiff-devel
 
 # Install openssl
 RUN mkdir -p /src \
@@ -80,11 +80,9 @@ RUN mkdir -p /src \
     && make clean \
     && rm -rf /src
 
-COPY hdf5-1.10.1.tar.gz /hdf5-1.10.1.tar.gz
-
 # hdf
 RUN cd /usr/local/src \
-    && cp /hdf5-1.10.1.tar.gz . \
+    && curl -f -L -O https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz \
     && tar xzf hdf5-1.10.1.tar.gz \
     && cd hdf5-1.10.1 \
     && ./configure --prefix=/usr/local --enable-shared --enable-build-mode=production CFLAGS="-O2 -Wl,-S" \
@@ -105,18 +103,24 @@ RUN cd /usr/local/src \
     && curl -f -L -O https://github.com/libexpat/libexpat/releases/download/R_2_2_5/expat-2.2.5.tar.bz2 \
     && tar xjf expat-2.2.5.tar.bz2 \
     && cd expat-2.2.5 \
-    && ./configure --prefix=/usr/local \
+    && CFLAGS="-O2 -Wl,-S" ./configure --prefix=/usr/local \
     && make \
     && make install
 
-COPY patches/changeset_40330.diff /changeset_40330.diff
+## webp
+RUN cd /usr/local/src \
+    && curl -f -L -O https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-0.6.1.tar.gz \
+    && tar xzf libwebp-0.6.1.tar.gz \
+    && cd libwebp-0.6.1 \
+    && CFLAGS="-O2 -Wl,-S" ./configure --prefix=/usr/local \
+    && make \
+    && make install
 
 # gdal
 RUN cd /usr/local/src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.2.2/gdal-2.2.2.tar.gz \
-    && tar xzf gdal-2.2.2.tar.gz \
-    && cd gdal-2.2.2 \
-    && patch -u --verbose -p4 < /changeset_40330.diff \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.2.3/gdal-2.2.3.tar.gz \
+    && tar xzf gdal-2.2.3.tar.gz \
+    && cd gdal-2.2.3 \
     && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
         --with-threads \
         --disable-debug \
@@ -124,10 +128,11 @@ RUN cd /usr/local/src \
         --without-grass \
         --without-libgrass \
         --without-jpeg12 \
-        --with-libtiff=internal \
+        --with-libtiff \
         --with-jpeg \
         --with-gif \
         --with-png \
+        --with-webp \
         --with-geotiff=internal \
         --with-pcraster=internal \
         --with-pcraster=internal \
