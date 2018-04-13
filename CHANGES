@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.7.1 (2018-04-13)
+------------------
+
+- Add libjpeg so we can have JPEG compression in libtiff (#28).
+
 1.7.0 (2018-03-01)
 ------------------
 
