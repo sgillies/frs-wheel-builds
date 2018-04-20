@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.7.2 (2018-04-20)
+------------------
+
+- Patch for a PROJ fix in 5.0 that hasn't been backported.
+
 1.7.1 (2018-04-13)
 ------------------
 
