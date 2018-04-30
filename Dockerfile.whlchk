@@ -1,8 +1,9 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 RUN apt-get update && apt-get install -y \
         python-virtualenv
 
 RUN virtualenv -p python3 /root/venv \
     && . /root/venv/bin/activate \
+    && curl https://bootstrap.pypa.io/get-pip.py | python \
     && pip install -U pip

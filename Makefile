@@ -38,6 +38,7 @@ src/rasterio/.git:
 dist/shapely.tar.gz: src/Shapely/.git dist
 	virtualenv -p python3.5 $(BUILDDIR)/sdist && \
 	source $(BUILDDIR)/sdist/bin/activate && \
+	python get-pip.py && \
 	pip install -U pip && \
 	pip install "numpy>=1.11" && \
 	cd src/Shapely && \
@@ -51,7 +52,10 @@ dist/shapely.tar.gz: src/Shapely/.git dist
 dist/fiona.tar.gz: src/Fiona/.git dist
 	virtualenv -p python3.5 $(BUILDDIR)/sdist && \
 	source $(BUILDDIR)/sdist/bin/activate && \
-	pip install -U pip && \
+	python --version && \
+	python get-pip.py && \
+	python -m pip install -U pip && \
+	pip --version && \
 	pip install "numpy>=1.11" && \
 	cd src/Fiona && \
 	git fetch --tags && git checkout $(VERSION) && \
@@ -64,6 +68,7 @@ dist/fiona.tar.gz: src/Fiona/.git dist
 dist/rasterio.tar.gz: src/rasterio/.git dist
 	virtualenv -p python3.5 $(BUILDDIR)/sdist && \
 	source $(BUILDDIR)/sdist/bin/activate && \
+	python get-pip.py && \
 	pip install -U pip && \
 	pip install "numpy>=1.11" && \
 	cd src/rasterio && \

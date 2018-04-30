@@ -9,6 +9,7 @@ for py in 2.7 3.4 3.5 3.6; do
     tmpvenv="${BUILDDIR}/venv_rasterio_${py}_test"
     virtualenv -p python${py} ${tmpvenv}
     source ${tmpvenv}/bin/activate
+    python get-pip.py
     pip install -U pip
     pip install rasterio[test]==$(cat RASTERIO_VERSION.txt) -f wheels
     cd rasterio && python -m pytest -Wi -k "not test_read_no_band"

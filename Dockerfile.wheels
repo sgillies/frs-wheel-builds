@@ -118,9 +118,9 @@ RUN cd /usr/local/src \
 
 # gdal
 RUN cd /usr/local/src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.2.3/gdal-2.2.3.tar.gz \
-    && tar xzf gdal-2.2.3.tar.gz \
-    && cd gdal-2.2.3 \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.2.4/gdal-2.2.4.tar.gz \
+    && tar xzf gdal-2.2.4.tar.gz \
+    && cd gdal-2.2.4 \
     && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
         --with-threads \
         --disable-debug \
@@ -143,6 +143,7 @@ RUN cd /usr/local/src \
         --with-geos=/usr/local/bin/geos-config \
         --with-static-proj4=/usr/local \
         --with-expat=/usr/local \
+        --with-sqlite3 \
         --with-libjson-c \
         --with-libiconv-prefix=/usr \
         --with-libz=/usr \
@@ -159,6 +160,7 @@ RUN cd /usr/local/src \
 # Bake dev requirements into the Docker image for faster builds
 RUN for PYBIN in /opt/python/*/bin; do \
         if [[ $PYBIN == *"26"* ]]; then continue; fi ; \
+        curl https://bootstrap.pypa.io/get-pip.py | python ; \
         $PYBIN/pip install -U pip ; \
         $PYBIN/pip install cython "numpy>=1.11" --only-binary cython,numpy ; \
     done

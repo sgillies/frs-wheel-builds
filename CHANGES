@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.8.0 (2018-04-30)
+------------------
+
+- Include get-pip.py to work around PyPI TLS changes.
+- Update GDAL to 2.2.4.
+- Add sqlite3 to get geopackage format support on manylinux1.
+
 1.7.2 (2018-04-20)
 ------------------
 

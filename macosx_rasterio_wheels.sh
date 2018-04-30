@@ -6,6 +6,7 @@ for py in 2.7 3.4 3.5 3.6; do
     tmpvenv="${BUILDDIR}/venv_rasterio_${py}_wheels"
     virtualenv -p python${py} ${tmpvenv}
     source ${tmpvenv}/bin/activate
+    python get-pip.py
     pip install -U pip wheel
     pip install "numpy>=1.11"
     pip install -r src/rasterio/requirements-dev.txt
