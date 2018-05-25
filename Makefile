@@ -60,8 +60,9 @@ dist/fiona.tar.gz: src/Fiona/.git dist
 	cd src/Fiona && \
 	git fetch --tags && git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	python setup.py --version | tail -1 > ../../FIONA_VERSION.txt && \
-	python setup.py sdist
+	GDAL_CONFIG=$(GDAL_CONFIG) python setup.py --version | tail -1 > ../../FIONA_VERSION.txt && \
+	which python && pip list && \
+	GDAL_CONFIG=$(GDAL_CONFIG) python setup.py sdist
 	cp src/Fiona/dist/*.tar.gz dist
 	cp dist/Fiona*.tar.gz dist/fiona.tar.gz
 
@@ -74,9 +75,9 @@ dist/rasterio.tar.gz: src/rasterio/.git dist
 	cd src/rasterio && \
 	git fetch --tags && git checkout $(VERSION) && \
 	pip install -r requirements-dev.txt && \
-	python setup.py --version | tail -1 > ../../RASTERIO_VERSION.txt && \
+	GDAL_CONFIG=$(GDAL_CONFIG) python setup.py --version | tail -1 > ../../RASTERIO_VERSION.txt && \
 	which python && pip list && python -c "import numpy; print(numpy.__version__)" && \
-	python setup.py sdist
+	GDAL_CONFIG=$(GDAL_CONFIG) python setup.py sdist
 	cp src/rasterio/dist/*.tar.gz dist
 	cp dist/rasterio*.tar.gz dist/rasterio.tar.gz
 
@@ -109,10 +110,10 @@ fiona_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/fion
 fiona: dist/fiona.tar.gz fiona_macosx fiona_manylinux1
 
 rasterio_wheels: dist/rasterio.tar.gz wheels
-	BUILDDIR=$(BUILDDIR) MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $(CFLAGS)" ./macosx_rasterio_wheels.sh
+	BUILDDIR=$(BUILDDIR) MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) PACKAGE_DATA=1 PROJ_LIB=$(PROJ_LIB) GDAL_CONFIG=$(GDAL_CONFIG) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GDAL_CONFIG) --cflags)" LDFLAGS="$$($(GDAL_CONFIG) --libs) $(CFLAGS)" GDAL_VERSION="2.2" ./macosx_rasterio_wheels.sh
 
 rasterio_macosx: rasterio_wheels
-	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_rasterio_tests.sh
+	PATH=$(CWD)/parts/gdal/bin:$(PATH) DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_rasterio_tests.sh
 	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/rasterio*.whl
 
 rasterio_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/rasterio.tar.gz
@@ -130,4 +131,4 @@ clean:
 	rm -rf wheels
 	rm -rf src/Fiona
 	rm -rf src/rasterio
-	rm -rf src/Shapely
+	
