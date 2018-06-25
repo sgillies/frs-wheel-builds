@@ -1,9 +1,17 @@
 FROM ubuntu:16.04
 
-RUN apt-get update && apt-get install -y \
-        python-virtualenv
+RUN apt-get update && apt-get install -y python-virtualenv
+
+RUN apt-get update && apt-get install -y curl
 
 RUN virtualenv -p python3 /root/venv \
     && . /root/venv/bin/activate \
-    && curl https://bootstrap.pypa.io/get-pip.py | python \
-    && pip install -U pip
+    && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
+    && python get-pip.py \
+    && python -m pip install -U pip
+
+RUN virtualenv -p python2 /root/venv2 \
+    && . /root/venv2/bin/activate \
+    && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
+    && python get-pip.py \
+    && python -m pip install -U pip
