@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.8.4 (2018-06-27)
+------------------
+
+- Link netcdf 4 in manylinux1 wheels.
+
+1.8.3 (2018-06-23)
+------------------
+
+- Remove ignored -Wl,-S cflags and remove --without-hdf4 and --without-hdf5
+  GDAL configuration options on manylinux1 to match macosx wheel builds.
+
 1.8.2 (2018-06-11)
 ------------------
 

@@ -148,7 +148,7 @@ RUN cd /usr/local/src \
         --with-libiconv-prefix=/usr \
         --with-libz=/usr \
         --with-curl=/usr/local/bin/curl-config \
-        --with-netcdf=/usr/local/netcdf \
+        --with-netcdf=/usr/local \
         --with-openjpeg \
         --without-jasper \
         --without-python \
