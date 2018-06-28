@@ -16,11 +16,11 @@ RUN yum update -y && yum install -y json-c-devel zlib-devel libtiff-devel
 # Install openssl
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O https://www.openssl.org/source/openssl-1.0.2l.tar.gz \
-    && echo "ce07195b659e75f4e1db43552860070061f156a98bb37b672b101ba6e3ddf30c  openssl-1.0.2l.tar.gz" > checksum \
+    && curl -f -L -O https://www.openssl.org/source/openssl-1.0.2o.tar.gz \
+    && echo "ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d  openssl-1.0.2o.tar.gz" > checksum \
     && sha256sum -c checksum \
-    && tar zxf openssl-1.0.2l.tar.gz \
-    && cd /src/openssl-1.0.2l \
+    && tar zxf openssl-1.0.2o.tar.gz \
+    && cd /src/openssl-1.0.2o \
     && ./config no-shared no-ssl2 no-async -fPIC -O2 \
     && make \
     && make install \
