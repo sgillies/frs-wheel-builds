@@ -2,7 +2,7 @@
 
 set -e
 
-for py in 2.7 3.4 3.5 3.6; do
+for py in 2.7 3.4 3.5 3.6 3.7; do
     tmpvenv="${BUILDDIR}/venv_rasterio_${py}_wheels"
     virtualenv -p python${py} ${tmpvenv}
     source ${tmpvenv}/bin/activate
