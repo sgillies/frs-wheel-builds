@@ -12,6 +12,7 @@ GEOS_CONFIG = "$(CWD)/parts/geos/bin/geos-config"
 GDAL_CONFIG = "$(CWD)/parts/gdal/bin/gdal-config"
 PROJ_LIB = "$(CWD)/parts/proj4/share/proj"
 DYLD_LIBRARY_PATH = "$(CWD)/parts/gdal/lib:$(CWD)/parts/geos/lib:$(CWD)/parts/openjpeg/lib:$(CWD)/parts/json-c/lib:$(CWD)/parts/proj4/lib:$(CWD)/parts/hdf5/lib:$(CWD)/parts/netcdf/lib:$(CWD)/parts/sqlite/lib"
+LD_LIBRARY_PATH = "$(CWD)/parts/gdal/lib:$(CWD)/parts/geos/lib:$(CWD)/parts/openjpeg/lib:$(CWD)/parts/json-c/lib:$(CWD)/parts/proj4/lib:$(CWD)/parts/hdf5/lib:$(CWD)/parts/netcdf/lib:$(CWD)/parts/sqlite/lib"
 
 BUILDDIR := $(shell mktemp -d $(TMPDIR)frswb.XXXXXX)
 
@@ -89,7 +90,7 @@ shapely_wheels: dist/shapely.tar.gz wheels
 	BUILDDIR=$(BUILDDIR) MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS) $$($(GEOS_CONFIG) --cflags)" LDFLAGS="$$($(GEOS_CONFIG) --clibs) $(CFLAGS)" ./macosx_shapely_wheels.sh
 
 shapely_macosx: shapely_wheels
-	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_shapely_tests.sh
+	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_shapely_tests.sh
 	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/Shapely*.whl
 
 shapely_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/shapely.tar.gz
@@ -120,6 +121,36 @@ rasterio_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/r
 	docker run -v $(CURDIR):/io wheelbuilder bash -c "/io/build-linux-wheels.sh /io/dist/rasterio.tar.gz"
 
 rasterio: dist/rasterio.tar.gz rasterio_macosx rasterio_manylinux1
+
+src/rio-color/.git:
+	git clone https://github.com/mapbox/rio-color.git src/rio-color
+
+dist/rio-color.tar.gz: src/rio-color/.git dist
+	virtualenv -p python3.5 $(BUILDDIR)/sdist && \
+	source $(BUILDDIR)/sdist/bin/activate && \
+	python get-pip.py && \
+	pip install -U pip && \
+	pip install "numpy>=1.11" && \
+	cd src/rio-color && \
+	git fetch --tags && git checkout $(VERSION) && \
+	pip install -r requirements-dev.txt && \
+	python setup.py --version | tail -1 > ../../RIO_COLOR_VERSION.txt && \
+	which python && pip list && \
+	python setup.py sdist
+	cp src/rio-color/dist/*.tar.gz dist
+	cp dist/rio-color*.tar.gz dist/rio-color.tar.gz
+
+rio_color_wheels: dist/rio-color.tar.gz wheels
+	BUILDDIR=$(BUILDDIR) MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) CXXFLAGS="$(CXXFLAGS)" CFLAGS="$(CFLAGS)" LDFLAGS="$(CFLAGS)" ./macosx_riocolor_wheels.sh
+
+rio_color_macosx: rio_color_wheels
+	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_riocolor_tests.sh
+	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/rio-color*.whl
+
+rio_color_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/rio-color.tar.gz
+	docker run -v $(CURDIR):/io wheelbuilder bash -c "/io/build-linux-wheels.sh /io/dist/rio-color.tar.gz"
+
+rio_color: dist/rio-color.tar.gz rio_color_macosx rio_color_manylinux1
 
 clean:
 	rm -rf .wheelbuilder_image_built
