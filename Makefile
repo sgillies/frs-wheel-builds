@@ -145,12 +145,15 @@ rio_color_wheels: dist/rio-color.tar.gz wheels
 
 rio_color_macosx: rio_color_wheels
 	DYLD_LIBRARY_PATH=$(DYLD_LIBRARY_PATH) BUILDDIR=$(BUILDDIR) ./macosx_riocolor_tests.sh
-	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/rio-color*.whl
+	parallel rename -e "s/macosx_10_6\.intel/macosx_10_9_intel.macosx_10_9_x86_64/" {} ::: dist/rio_color*.whl
 
 rio_color_manylinux1: dist .wheelbuilder_image_built build-linux-wheels.sh dist/rio-color.tar.gz
 	docker run -v $(CURDIR):/io wheelbuilder bash -c "/io/build-linux-wheels.sh /io/dist/rio-color.tar.gz"
 
-rio_color: dist/rio-color.tar.gz rio_color_macosx rio_color_manylinux1
+rio_color_zip_delete: rio_color_manylinux1 rio_color_macosx
+	parallel zip -d {} rio_color/colorspace.pyx rio_color/colorspace.c ::: dist/rio_color*.whl
+
+rio_color: dist/rio-color.tar.gz rio_color_zip_delete
 
 clean:
 	rm -rf .wheelbuilder_image_built
@@ -162,4 +165,5 @@ clean:
 	rm -rf wheels
 	rm -rf src/Fiona
 	rm -rf src/rasterio
-	
+	rm -rf src/rio-color
+

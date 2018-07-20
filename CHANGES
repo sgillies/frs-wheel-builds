@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.10.1 (2018-07-19)
+-------------------
+
+- Remove unneeded *.pyx and *.c files from rio-color platform wheels.
+
 1.10.0 (2018-07-18)
 -------------------
 
